@@ -699,10 +699,6 @@
     (cl:ash (cl:logand n +jsclass-reserved-slots-mask+)
             +jsclass-reserved-slots-shift+)))
 
-(cl:defconstant +jsclass-global-flags+ (cl:logior +jsclass-is-global+
-                                                  (jsclass-has-reserved-slots
-                                                   (cffi:foreign-enum-value 'smlib:js-proto-key :js-proto-limit))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; jsval business
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -735,16 +731,17 @@
     (cl:declare (cl:type cl:integer int))
     (cl:logior (cl:ash int 1) 1))
 
+  (cl:defun jsval-to-int (jsval)
+    #+nil
+    (cl:declare (cl:type (cl:satisfies jsval-intp) jsval))
+    (cl:ash jsval -1))
+
+  (cl:defconstant +jsval-void+ (jsval-for-int (cl:- 0 (cl:ash 1 30))))
 
   (cl:defun jsval-intp (jsval)
     (cl:and (cl:not (cl:= 0 (cl:logand jsval +jsval-int+)))
             (cl:not (cl:= jsval +jsval-void+))))
 
-  (cl:defun jsval-to-int (jsval)
-    (cl:declare (cl:type (cl:satisfies jsval-intp) jsval))
-    (cl:ash jsval -1))
-
-  (cl:defconstant +jsval-void+ (jsval-for-int (cl:- 0 (cl:ash 1 30))))
 
   (cl:defun jsval-for-boolean (t-or-nil)
     (cl:let ((x (cl:if t-or-nil 1 0)))
@@ -2434,6 +2431,10 @@
   (:js-proto-xml-filter 31)
   (:js-proto-no-such-method 32)
   (:js-proto-limit 33))
+
+(cl:defconstant +jsclass-global-flags+ (cl:logior +jsclass-is-global+
+                                                  (jsclass-has-reserved-slots
+                                                   (cffi:foreign-enum-value 'smlib:js-proto-key :js-proto-limit))))
 
 (cffi:defcfun ("JS_GetClassObject" js-get-class-object) js-bool (cx :pointer)
                                                                 (obj :pointer)

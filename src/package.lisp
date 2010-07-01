@@ -1,10 +1,17 @@
-(cl:in-package :cl-user
+(cl:in-package :cl-user)
 
 (defpackage :cl-spidermonkey
+    (:nicknames :spidermonkey :sm)
     (:use :cl))
 
+(in-package :cl-spidermonkey)
 
-How to generate bindings:
+(cffi:load-foreign-library "libjs.so"
+                           :search-path (asdf:system-relative-pathname (asdf:find-system :cl-spidermonkey)
+                                                                       #P"lib/"))
+
+
+;;;How to generate bindings:
 ;;(verrazano:generate-binding (list :cffi
 ;;                                           :package-name :spidermonkey-bindings
 ;;                                           :input-files '("/git/cl-spidermonkey/include/jsapi.h")

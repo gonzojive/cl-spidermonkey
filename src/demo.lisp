@@ -60,22 +60,6 @@
 
           (cffi:mem-ref d :double))))))
 
-(defun evaluate-js (code)
-  "Evaluates the Javascript code CODE and returns the jsval result."
-  (cffi:with-foreign-strings ((js code)
-                              (filename "string.js"))
-    (cffi:with-foreign-object (rval 'smlib:jsval)
-      (if (not (eql 0
-                    (with-float-traps-masked ()
-                      (smlib:js-evaluate-script *js-context* *global*
-                                                js 
-                                                (length code)
-                                                filename
-                                                20
-                                                rval))))
-
-          (cffi:mem-ref rval 'smlib:jsval)
-          (error "Error evaluating script.")))))
 
 
 (defun jsval-to-lisp-number (
