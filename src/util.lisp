@@ -21,7 +21,7 @@
 
 (defun evaluate-js (code)
   "Evaluates the Javascript code CODE and returns the jsval result."
-  (evaluate-js-raw code))
+  (js-value-to-lisp (evaluate-js-raw code)))
 
 (defun js-value-to-lisp (jsval)
   "Given some rval, returns the lisp equivalent value if there is one,

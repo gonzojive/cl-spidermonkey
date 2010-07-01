@@ -2,7 +2,9 @@
 
 (defpackage :cl-spidermonkey
     (:nicknames :spidermonkey :sm)
-    (:use :cl))
+    (:use :cl)
+  (:export #:with-js-context
+           #:evaluate-js))
 
 (in-package :cl-spidermonkey)
 
