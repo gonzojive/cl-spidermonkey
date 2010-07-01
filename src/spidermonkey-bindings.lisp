@@ -604,11 +604,12 @@
 
 (cl:in-package :spidermonkey-bindings)
 
-(cl:defun js-bit (n)
-  (cl:ash 1 n))
+(cl:eval-when (:compile-toplevel :load-toplevel :execute)
+  (cl:defun js-bit (n)
+    (cl:ash 1 n))
 
-(cl:defun js-bitmask (n)
-  (cl:- n 1))
+  (cl:defun js-bitmask (n)
+    (cl:- (js-bit n) 1)))
 
 (cl:defconstant +jsoption-strict+ (js-bit 0))
 (cl:defconstant +jsoption-werror+ (js-bit 1))
@@ -639,9 +640,10 @@
 (cl:defconstant +jsclass-is-global+     (js-bit (cl:+ 2 +jsclass-high-flags-shift+)))
 (cl:defconstant +jsclass-mark-is-trace+ (js-bit (cl:+ 3 +jsclass-high-flags-shift+)))
 
-(cl:defun jsclass-has-reserved-slots (n)
-  (cl:ash (cl:logand n +jsclass-reserved-slots-mask+)
-          +jsclass-reserved-slots-shift+))
+(cl:eval-when (:compile-toplevel :load-toplevel :execute)
+  (cl:defun jsclass-has-reserved-slots (n)
+    (cl:ash (cl:logand n +jsclass-reserved-slots-mask+)
+            +jsclass-reserved-slots-shift+)))
 
 (cl:defconstant +jsclass-global-flags+ (cl:logior +jsclass-is-global+
                                                   (jsclass-has-reserved-slots
@@ -1113,7 +1115,7 @@
   (mark js-mark-op)
   (reserve-slots js-reserve-slots-op))
 
-(cl:defun make-js-class (&key 
+
 
 (cffi:defcfun ("JS_SetOptions" js-set-options) uint-32 (cx :pointer)
                                                        (options uint-32))
