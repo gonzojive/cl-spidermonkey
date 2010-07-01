@@ -2,9 +2,10 @@
 
 (defpackage :cl-spidermonkey
     (:nicknames :spidermonkey :sm)
-    (:use :cl)
+    (:use :cl :anaphora :alexandria)
   (:export #:with-js-context
-           #:evaluate-js))
+           #:evaluate-js
+           #:compile-and-evaluate-js))
 
 (in-package :cl-spidermonkey)
 

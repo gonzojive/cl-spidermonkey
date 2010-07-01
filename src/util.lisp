@@ -1,28 +1,8 @@
 (in-package :cl-spidermonkey)
 
-(defun evaluate-js-raw (code)
-  "Evaluates the Javascript code CODE and returns the jsval result."
-  (cffi:with-foreign-strings ((js code)
-                              (filename "string.js"))
-    (cffi:with-foreign-object (rval 'smlib:jsval)
-      (if (not (eql 0
-                    (let ((foreign-context (foreign-context *js-context*)))
-                      (with-float-traps-masked ()
-                        (smlib:js-evaluate-script foreign-context
-                                                  (smlib:js-get-global-object foreign-context)
-                                                  js 
-                                                  (length code)
-                                                  filename
-                                                  20
-                                                  rval)))))
-
-          (cffi:mem-ref rval 'smlib:jsval)
-          (error "Error evaluating script.")))))
-
-(defun evaluate-js (code)
-  "Evaluates the Javascript code CODE and returns the jsval result."
-  (js-value-to-lisp (evaluate-js-raw code)))
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Javasscript value conversion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun js-value-to-lisp (jsval)
   "Given some rval, returns the lisp equivalent value if there is one,
 otherwise returns the original value."
@@ -33,7 +13,6 @@ otherwise returns the original value."
 
 (defun js-string-to-lisp (js-string)
   "Converts a spidermonkey string pointer to a lisp string."
-
   (let* ((char-array (smlib:js-get-string-chars js-string))
          (len (smlib:js-get-string-length js-string))
          (native-string (make-string len)))

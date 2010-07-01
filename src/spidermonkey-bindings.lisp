@@ -643,6 +643,7 @@
            "JSVAL-FOR-BOOLEAN"
 
            "JSVAL-TO-POINTER"
+           "JSVAL-FOR-OBJECT"
            
            ))
 
@@ -714,6 +715,13 @@
 
 (cl:defconstant +jsval-tagbits+ 3)
 (cl:defconstant +jsval-tagmask+ (js-bitmask +jsval-tagbits+))
+
+(cl:defun jsval-for-object (object)
+  (cl:cond
+    ((cffi:pointerp object) (cffi:pointer-address object))
+    ((cl:integerp object) object)
+    (cl:t (cl:error "Invalid object to convert to object. ~S" object))))
+     
 (cl:eval-when (:compile-toplevel :load-toplevel :execute)
   (cl:defun jsval-tag (jsval)
     (cl:logand jsval +jsval-tagmask+))

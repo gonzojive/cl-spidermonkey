@@ -14,7 +14,8 @@
                          (:file "spidermonkey-bindings" :depends-on ("package"))
                          (:file "port" :depends-on ("package"))
                          (:file "util" :depends-on ("port" "setup-teardown"))
-                         (:file "setup-teardown" :depends-on ("port" "spidermonkey-bindings")))))
+                         (:file "setup-teardown" :depends-on ("port" "spidermonkey-bindings"))
+                         (:file "evaluation" :depends-on ("port" "setup-teardown" "util")))))
   :depends-on ("alexandria" "cffi" "anaphora" "trivial-garbage"))
 
 (defsystem :cl-spidermonkey-tests
