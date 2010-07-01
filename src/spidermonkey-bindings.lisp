@@ -625,19 +625,24 @@
            "+JSVAL-TAGBITS+"
            "+JSVAL-TAGMASK+"
 
-           ;; JSVAL functions
+           ;; JSVAL predicates
            "JSVAL-BOOLEANP"
            "JSVAL-DOUBLEP"
            "JSVAL-INTP"
            "JSVAL-NULLP"
+           "JSVAL-STRINGP"
            "JSVAL-OBJECTP"
            "JSVAL-VOIDP"
-           
+
+           ;; JSVAL more advanced
            "JSVAL-FOR-INT"
            "JSVAL-TAG"
            "JSVAL-TO-INT"
 
            "JSVAL-TO-BOOLEAN"
+           "JSVAL-FOR-BOOLEAN"
+
+           "JSVAL-TO-POINTER"
            
            ))
 
@@ -732,8 +737,8 @@
 
 
   (cl:defun jsval-intp (jsval)
-    (cl:and (cl:= +jsval-int+ (jsval-tag jsval))
-         (cl:not (cl:= jsval +jsval-void+))))
+    (cl:and (cl:not (cl:= 0 (cl:logand jsval +jsval-int+)))
+            (cl:not (cl:= jsval +jsval-void+))))
 
   (cl:defun jsval-to-int (jsval)
     (cl:declare (cl:type (cl:satisfies jsval-intp) jsval))
@@ -745,6 +750,14 @@
     (cl:let ((x (cl:if t-or-nil 1 0)))
       (cl:logior (cl:ash x +jsval-tagbits+)
                  +jsval-boolean+)))
+
+  (cl:defun jsval-clear-tag (jsval)
+    (cl:logand jsval (cl:lognot +jsval-tagmask+)))
+
+  (cl:defun jsval-to-pointer (jsval)
+    (cl:let ((address (jsval-clear-tag jsval)))
+      ;; aligned every 2^3 bytes to make this magic happen
+      (cffi:make-pointer address)))
 
   ;;; predicates for jsval types
   (cl:defun jsval-voidp (jsval)
@@ -758,6 +771,9 @@
 
   (cl:defun jsval-booleanp (jsval)
     (cl:= +jsval-boolean+ (jsval-tag jsval)))
+
+  (cl:defun jsval-stringp (jsval)
+    (cl:= +jsval-string+ (jsval-tag jsval)))
 
   (cl:defun jsval-nullp (jsval)
     (cl:= jsval +jsval-null+))
