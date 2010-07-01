@@ -597,10 +597,59 @@
            "JS-CONTEXT"
            "JS-BOOL"
            "JS-INTN"
+           ;;;; Custom exports
            "+JSOPTION-STRICT+"
            "+JSOPTION-VAR-OBJ-FIX+"
            "+JSCLASS-GLOBAL-FLAGS+"
-           "+JSCLASS-HAS-PRIVATE+"))
+           "+JSCLASS-HAS-PRIVATE+"
+           
+
+           ;; JSVAL specific types
+           "+JSVAL-BOOLEAN+"
+           "+JSVAL-DOUBLE+"
+           "+JSVAL-INT+"
+           "+JSVAL-OBJECT+"
+           "+JSVAL-STRING+"
+
+           ;; JSVAL constant values
+           "+JSVAL-NULL+"
+           "+JSVAL-VOID+"
+           "+JSVAL-ZERO+"
+           "+JSVAL-TRUE+"
+           "+JSVAL-FALSE+"
+
+           "+JSVAL-INT-MAX+"
+           "+JSVAL-INT-MIN+"
+           "+JSVAL-INT-BITS+"
+
+           "+JSVAL-TAGBITS+"
+           "+JSVAL-TAGMASK+"
+
+           ;; JSVAL functions
+           "JSVAL-BOOLEANP"
+           "JSVAL-DOUBLEP"
+           "JSVAL-INTP"
+           "JSVAL-NULLP"
+           "JSVAL-OBJECTP"
+           "JSVAL-VOIDP"
+           
+           "JSVAL-FOR-INT"
+           "JSVAL-TAG"
+           "JSVAL-TO-INT"
+
+           "JSVAL-TO-BOOLEAN"
+           
+           ))
+
+#+nil
+(let ((syms nil)) (do-symbols (x :smlib) (push x syms))
+                   (setf syms (mapcar #'string syms))
+                   (setf syms (sort syms #'string-lessp))
+                   (setf syms (remove-if #'(lambda (x)
+                                             (not (eql (length "+JSVAL")
+                                                       (mismatch "+JSVAL" x))))
+                                         syms))
+                   syms)
 
 (cl:in-package :spidermonkey-bindings)
 
@@ -648,6 +697,83 @@
 (cl:defconstant +jsclass-global-flags+ (cl:logior +jsclass-is-global+
                                                   (jsclass-has-reserved-slots
                                                    (cffi:foreign-enum-value 'smlib:js-proto-key :js-proto-limit))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; jsval business
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(cl:defconstant +jsval-object+ 0)
+(cl:defconstant +jsval-int+ 1)
+(cl:defconstant +jsval-double+ 2)
+(cl:defconstant +jsval-string+ 4)
+(cl:defconstant +jsval-boolean+ 6)
+
+
+(cl:defconstant +jsval-null+ 0)
+
+
+(cl:defconstant +jsval-tagbits+ 3)
+(cl:defconstant +jsval-tagmask+ (js-bitmask +jsval-tagbits+))
+(cl:eval-when (:compile-toplevel :load-toplevel :execute)
+  (cl:defun jsval-tag (jsval)
+    (cl:logand jsval +jsval-tagmask+))
+
+  ;; jsval integer stuff
+  (cl:defconstant +jsval-int-bits+ 31)
+  (cl:defconstant +jsval-int-min+ (cl:- 1 (cl:ash 1 30)))
+  (cl:defconstant +jsval-int-max+ (cl:- (cl:ash 1 30) 1))
+
+  (cl:defun int-fits-in-jsval? (int)
+    (cl:declare (cl:type cl:integer int))
+    (cl:<= +jsval-int-min+ int +jsval-int-max+))
+
+  (cl:defun jsval-for-int (int)
+    (cl:declare (cl:type cl:integer int))
+    (cl:logior (cl:ash int 1) 1))
+
+
+  (cl:defun jsval-intp (jsval)
+    (cl:and (cl:= +jsval-int+ (jsval-tag jsval))
+         (cl:not (cl:= jsval +jsval-void+))))
+
+  (cl:defun jsval-to-int (jsval)
+    (cl:declare (cl:type (cl:satisfies jsval-intp) jsval))
+    (cl:ash jsval -1))
+
+  (cl:defconstant +jsval-void+ (jsval-for-int (cl:- 0 (cl:ash 1 30))))
+
+  (cl:defun jsval-for-boolean (t-or-nil)
+    (cl:let ((x (cl:if t-or-nil 1 0)))
+      (cl:logior (cl:ash x +jsval-tagbits+)
+                 +jsval-boolean+)))
+
+  ;;; predicates for jsval types
+  (cl:defun jsval-voidp (jsval)
+    (cl:= jsval +jsval-void+))
+
+  (cl:defun jsval-objectp (jsval)
+    (cl:= +jsval-object+ (jsval-tag jsval)))
+
+  (cl:defun jsval-doublep (jsval)
+    (cl:= +jsval-double+ (jsval-tag jsval)))
+
+  (cl:defun jsval-booleanp (jsval)
+    (cl:= +jsval-boolean+ (jsval-tag jsval)))
+
+  (cl:defun jsval-nullp (jsval)
+    (cl:= jsval +jsval-null+))
+
+
+
+  (cl:defconstant smlib::+jsval-zero+ (jsval-for-int 0))
+  (cl:defconstant smlib::+jsval-one+ (jsval-for-int 1))
+
+  (cl:defconstant smlib::+jsval-false+ (jsval-for-boolean cl:nil))
+  (cl:defconstant smlib::+jsval-true+ (jsval-for-boolean cl:t)))
+
+
+
+
+
 
 
 
@@ -2375,6 +2501,7 @@
 (cffi:defcfun ("_ZN7JSClassC1ERKS_" js-class-constructor) :void (this :pointer)
                                                                 (arg1 js-class))
 
+#+nil
 (cl:defun js-class-new ()
   (cl:let ((instance (cffi:foreign-alloc 'js-class)))
     (js-class-constructor instance)
